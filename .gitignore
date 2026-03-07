@@ -7,3 +7,5 @@ models/*
 !models/.gitkeep
 
 .idea
+
+docs/figures/*
