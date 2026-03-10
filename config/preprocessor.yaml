@@ -1,0 +1,23 @@
+# Data split
+test_size: 0.2
+random_state: 123456
+
+# Missing values
+missing_threshold: 0.5  # Drop columns with >50% missing
+categorical_missing_method: mode  # mode or constant
+numerical_missing_method: median    # median or mean
+
+# Outliers
+outlier_method: cap     # cap, later: remove, or ignore
+outlier_threshold: 1.5  # IQR multiplier
+
+# Encoding
+binary_encoding: label  # label
+categorical_encoding: onehot  # onehot, later: target
+max_onehot_unique_count: 26  # Use one-hot if less than this, else target encoding
+
+# Scaling
+scaling: standard    # standard, minmax, robust, or none
+
+# Target column
+target_column: SalePrice  # Name of the target column
