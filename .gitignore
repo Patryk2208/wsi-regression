@@ -10,3 +10,5 @@ models/*
 
 docs/figures/*
 !docs/figures/.gitkeep
+
+src/__pycache__/*
