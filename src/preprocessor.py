@@ -53,12 +53,15 @@ class DataPreprocessor:
         self.numerical_missing_method_pointer = self.numerical_missing_method_mapping[self.numerical_missing_method]
 
     def preprocess(self):
+        self.drop_ids()
         self.handle_missing_values()
         self.handle_outliers()
         self.encode_non_numeric_data()
         self.split_data()
         self.scale_data()
-        self.drop_ids()
+
+    def drop_ids(self):
+        self.preprocessed_data = self.preprocessed_data.drop(columns=['Id'])
 
     def handle_missing_values(self):
         for junk in ['None', '?']:
@@ -118,8 +121,18 @@ class DataPreprocessor:
 
     def scale_data(self):
         self.scaler.fit(self.X_train)
-        self.X_train = self.scaler.transform(self.X_train)
-        self.X_test = self.scaler.transform(self.X_test)
+        
+        # save column names, because NumPy doesn't save them
+        columns = self.X_train.columns
+        
+        self.X_train = pd.DataFrame(
+            self.scaler.transform(self.X_train), 
+            columns=columns,
+            index=self.X_train.index
+        )
+        self.X_test = pd.DataFrame(
+            self.scaler.transform(self.X_test), 
+            columns=columns,
+            index=self.X_test.index
+        )
     
-    def drop_ids(self):
-        self.preprocessed_data = self.preprocessed_data.drop(columns=['Id'])
