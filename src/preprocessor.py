@@ -5,11 +5,10 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder, MinMaxScaler, Ro
 
 
 class DataPreprocessor:
-    raw_data: pd.DataFrame
+    df: pd.DataFrame
 
     def __init__(self, df, config = None):
-        self.raw_data = df
-        self.preprocessed_data = self.raw_data.copy()
+        self.df = df
         self.X_train, self.X_test, self.y_train, self.y_test = None, None, None, None
 
         self.config = config or {}
@@ -61,56 +60,64 @@ class DataPreprocessor:
         self.scale_data()
 
     def drop_ids(self):
-        self.preprocessed_data = self.preprocessed_data.drop(columns=['Id'])
+        self.df = self.df.drop(columns=['Id'])
 
     def handle_missing_values(self):
         for junk in ['None', '?']:
-            self.preprocessed_data.replace(junk, np.nan, inplace=True)
+            self.df.replace(junk, np.nan, inplace=True)
 
-        for col in self.raw_data.columns:
-            if self.raw_data[col].isnull().sum() > 0:
-                if self.raw_data[col].dtype in ['object', 'category', 'string']:
-                    val = self.categorical_missing_method_pointer(self.raw_data[col])
-                else:
-                    val = self.numerical_missing_method_pointer(self.raw_data[col])
-                self.preprocessed_data[col] = self.preprocessed_data[col].fillna(val)
+        for col in self.df.columns:
+            if self.df[col].isnull().sum() == 0:
+                continue
+
+            if self.df[col].dtype == 'object':
+                # Try to force it to numeric if it looks like it should be.
+                converted = pd.to_numeric(self.df[col], errors='coerce')
+                if converted.dtype != 'object':
+                    self.df[col] = converted
+
+            if self.df[col].dtype in ['object', 'category', 'string']:
+                val = self.categorical_missing_method_pointer(self.df[col])
+            else:
+                val = self.numerical_missing_method_pointer(self.df[col])
+            self.df[col] = self.df[col].fillna(val)
 
     def handle_outliers(self):
-        columns = self.raw_data.select_dtypes(include=[np.number]).columns
+        columns = self.df.select_dtypes(include=[np.number]).columns
 
         for col in columns:
-            Q1 = self.preprocessed_data[col].quantile(0.25)
-            Q3 = self.preprocessed_data[col].quantile(0.75)
+            Q1 = self.df[col].quantile(0.25)
+            Q3 = self.df[col].quantile(0.75)
             IQR = Q3 - Q1
             lower_bound = Q1 - self.outlier_threshold * IQR
             upper_bound = Q3 + self.outlier_threshold * IQR
 
-            self.preprocessed_data[col] = self.preprocessed_data[col].clip(lower_bound, upper_bound)
+            self.df[col] = self.df[col].clip(lower_bound, upper_bound)
 
     def encode_non_numeric_data(self):
-        categorical_cols = self.preprocessed_data.select_dtypes(include=['object', 'category']).columns
+        categorical_cols = self.df.select_dtypes(include=['object', 'category']).columns
         
         for col in categorical_cols:
-            if self.preprocessed_data[col].nunique() == 2:
+            if self.df[col].nunique() == 2:
                 # binary data => label encoding
                 le = LabelEncoder()
-                self.preprocessed_data[col] = le.fit_transform(self.preprocessed_data[col].astype(str))
-            elif self.preprocessed_data[col].nunique() < self.max_onehot_unique_count:
+                self.df[col] = le.fit_transform(self.df[col].astype(str))
+            elif self.df[col].nunique() < self.max_onehot_unique_count:
                 # several categories => one-hot encoding
-                self.preprocessed_data = pd.get_dummies(
-                    self.preprocessed_data,
+                self.df = pd.get_dummies(
+                    self.df,
                     columns=[col],
                     drop_first=True,
                     prefix=col
                 )
             else:
                 # lots of categories => target encoding
-                target_means = self.preprocessed_data.groupby(col)[self.target_col].mean()
-                self.preprocessed_data[col] = self.preprocessed_data[col].map(target_means)
+                target_means = self.df.groupby(col)[self.target_col].mean()
+                self.df[col] = self.df[col].map(target_means)
 
     def split_data(self):
-        y = self.preprocessed_data[self.target_col]
-        X = self.preprocessed_data.drop(self.target_col, axis=1)
+        y = self.df[self.target_col]
+        X = self.df.drop(self.target_col, axis=1)
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X,
