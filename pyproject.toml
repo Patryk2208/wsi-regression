@@ -3,9 +3,9 @@ name = "projekt1-regresja"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Patryk Pol"}
+    {name = "Patryk Pol"},
+    {name = "Michał Napieralski"}
 ]
-readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pandas (>=3.0.1,<4.0.0)",
