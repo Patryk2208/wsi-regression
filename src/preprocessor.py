@@ -92,6 +92,8 @@ class DataPreprocessor:
             lower_bound = Q1 - self.outlier_threshold * IQR
             upper_bound = Q3 + self.outlier_threshold * IQR
 
+            # todo na co najmniej 3 cechach, prog ilosci cech ktory musi byc outlierem, zeby wywalic record
+
             self.df[col] = self.df[col].clip(lower_bound, upper_bound)
 
     def encode_non_numeric_data(self):
@@ -103,6 +105,8 @@ class DataPreprocessor:
                 le = LabelEncoder()
                 self.df[col] = le.fit_transform(self.df[col].astype(str))
             elif self.df[col].nunique() < self.max_onehot_unique_count:
+                # todo reszte do jdnego worka, pewien prog, gdy mamy malo wartosci dla pewnej kolumny
+
                 # several categories => one-hot encoding
                 self.df = pd.get_dummies(
                     self.df,
