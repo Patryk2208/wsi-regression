@@ -21,3 +21,49 @@ scaling: standard    # standard, minmax, robust, or none
 
 # Target column
 target_col: SalePrice  # Name of the target column
+
+#model_type: linear
+#model_params: {}
+
+#model_type: ridge
+#model_params:
+#  alpha: 1.0
+
+model_type: lasso
+model_params:
+  alpha: 0.0008
+
+gradations:
+  # General Quality and Condition (1-10 scale)
+  OverallQual: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  OverallCond: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+  # Standard 5-point Quality scales
+  ExterQual: ["Po", "Fa", "TA", "Gd", "Ex"]
+  ExterCond: ["Po", "Fa", "TA", "Gd", "Ex"]
+  HeatingQC: ["Po", "Fa", "TA", "Gd", "Ex"]
+  KitchenQual: ["Po", "Fa", "TA", "Gd", "Ex"]
+
+  # Basement metrics (including NA for no basement)
+  BsmtQual: ["NA", "Po", "Fa", "TA", "Gd", "Ex"]
+  BsmtCond: ["NA", "Po", "Fa", "TA", "Gd", "Ex"]
+  BsmtExposure: ["NA", "No", "Mn", "Av", "Gd"]
+  BsmtFinType1: ["NA", "Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"]
+  BsmtFinType2: ["NA", "Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"]
+
+  # Garage and Exterior features
+  GarageFinish: ["NA", "Unf", "RFn", "Fin"]
+  GarageQual: ["NA", "Po", "Fa", "TA", "Gd", "Ex"]
+  GarageCond: ["NA", "Po", "Fa", "TA", "Gd", "Ex"]
+  PavedDrive: ["N", "P", "Y"]
+  FireplaceQu: ["NA", "Po", "Fa", "TA", "Gd", "Ex"]
+  PoolQC: ["NA", "Fa", "TA", "Gd", "Ex"]
+
+  # Infrastructure and Land
+  LotShape: ["IR3", "IR2", "IR1", "Reg"]
+  Utilities: ["ELO", "NoSeWa", "NoSewr", "AllPub"]
+  LandSlope: ["Sev", "Mod", "Gtl"]
+  Functional: ["Sal", "Sev", "Maj2", "Maj1", "Mod", "Min2", "Min1", "Typ"]
+  
+  # Fence (ranked by privacy/security level)
+  Fence: ["NA", "MnWw", "GdWo", "MnPrv", "GdPrv"]

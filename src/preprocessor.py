@@ -18,6 +18,7 @@ class Preprocessor:
     def prepare_base_data(self):
         """Universal cleaning that doesn't depend on the split."""
         self._drop_ids()
+        self._handle_gradations()
         self._handle_missing_values()
         self._handle_outliers()
         self._encode_low_cardinality()
@@ -33,23 +34,22 @@ class Preprocessor:
         for train_idx, test_idx in kf.split(X):
             self.X_train, self.X_test = X.iloc[train_idx].copy(), X.iloc[test_idx].copy()
             self.y_train, self.y_test = y.iloc[train_idx], y.iloc[test_idx]
-            self._process_fold()
+            
+            # post-split processing
+            self._encode_high_cardinality()
+            self._scale_data()
+            
             yield self.X_train, self.X_test, self.y_train, self.y_test
-
-    def _process_fold(self):
-
-        self._encode_high_cardinality()
-        
-        scaler = self.cfg.get_scaler()
-        scaler.fit(self.X_train)
-        cols = self.X_train.columns
-        self.X_train = pd.DataFrame(scaler.transform(self.X_train), columns=cols, index=self.X_train.index)
-        self.X_test  = pd.DataFrame(scaler.transform(self.X_test),  columns=cols, index=self.X_test.index)
-        
-        return self.X_train, self.X_test
 
     def _drop_ids(self):
         self.df = self.df.drop(columns=['Id'])
+
+    def _handle_gradations(self):
+        for column, order in self.cfg.gradations.items():
+            if column in self.df.columns:
+                # Create a mapping dictionary, e.g. {"Po": 0, "Fa": 1, ...}.
+                mapping = {val: i for i, val in enumerate(order)}
+                self.df[column] = self.df[column].map(mapping).astype(float)
 
     # TODO: some Nones are actual category values
     def _handle_missing_values(self):
@@ -87,7 +87,7 @@ class Preprocessor:
 
             # todo na co najmniej 3 cechach, prog ilosci cech ktory musi byc outlierem, zeby wywalic record
 
-            self.df[col] = self.df[col].clip(lower_bound, upper_bound)
+            self.df = self.df[(self.df[col] >= lower_bound) & (self.df[col] <= upper_bound)]
 
     def _encode_low_cardinality(self):
         """Handles binary and one-hot encoding (safe to do before split)."""
@@ -148,18 +148,19 @@ class Preprocessor:
         # self.X_test[cols_to_encode] = encoder.transform(self.X_test[cols_to_encode])
 
     def _scale_data(self):
-        self.scaler.fit(self.X_train)
+        scaler = self.cfg.get_scaler()
+        scaler.fit(self.X_train)
         
         # save column names, because NumPy doesn't save them
         columns = self.X_train.columns
         
         self.X_train = pd.DataFrame(
-            self.scaler.transform(self.X_train), 
+            scaler.transform(self.X_train), 
             columns=columns,
             index=self.X_train.index
         )
         self.X_test = pd.DataFrame(
-            self.scaler.transform(self.X_test), 
+            scaler.transform(self.X_test), 
             columns=columns,
             index=self.X_test.index
         )

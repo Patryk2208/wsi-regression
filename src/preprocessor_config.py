@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Callable
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 
 @dataclass
@@ -23,9 +23,14 @@ class PreprocessorConfig:
     binary_encoding: str = 'label'
     categorical_encoding: str = 'onehot'
     max_onehot_unique_count: int = 20
+    gradations: Dict[str, List[Any]] = field(default_factory=dict)
 
     # scaling
     scaling: str = 'standard'
+
+    # model config    
+    model_type: str = "linear"  # Options: "linear", "ridge", "lasso"
+    model_params: Dict[str, Any] = field(default_factory=dict)
 
     def get_scaler(self):
         mapping = {
