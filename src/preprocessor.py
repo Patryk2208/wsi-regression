@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import KFold
+from sklearn.model_selection import RepeatedKFold
 from sklearn.preprocessing import LabelEncoder
 
 from .preprocessor_config import PreprocessorConfig
@@ -18,6 +18,7 @@ class Preprocessor:
     def prepare_base_data(self):
         """Universal cleaning that doesn't depend on the split."""
         self._drop_ids()
+        self._feature_engineering()
         self._handle_gradations()
         self._handle_missing_values()
         self._handle_outliers()
@@ -26,7 +27,10 @@ class Preprocessor:
     def get_folds(self):
         """A generator that yields split, and scaled data."""
         
-        kf = KFold(n_splits=self.cfg.n_splits, shuffle=True, random_state=self.cfg.random_state)
+        kf = RepeatedKFold(
+            n_repeats=self.cfg.n_repeats,
+            n_splits=self.cfg.n_splits,
+            random_state=self.cfg.random_state)
         
         y = self.df[self.cfg.target_col]
         X = self.df.drop(columns=[self.cfg.target_col])
@@ -44,6 +48,27 @@ class Preprocessor:
     def _drop_ids(self):
         self.df = self.df.drop(columns=['Id'])
 
+    def _feature_engineering(self):
+        settings = self.cfg.feature_engineering
+
+        self.df['LotFrontage'] = self.df['LotFrontage'].replace('?', np.nan)
+        # self.df['LotFrontage'] = self.df['LotFrontage'].replace('?', 0.0) # gorsze
+        self.df['LotFrontage'] = pd.to_numeric(self.df['LotFrontage'], errors="coerce")
+
+        if settings['calc_age'] != 'no':
+            self.df['Age'] = self.df['YrSold'] - self.df['YearBuilt']
+            if settings['calc_age'] == 'replace':
+                self.df = self.df.drop(columns=['YrSold', 'YearBuilt'])
+                
+        if settings['calc_total_sf'] != 'no':
+            self.df['TotalSF'] = (
+                self.df['1stFlrSF'] + 
+                self.df['2ndFlrSF'] + 
+                self.df['TotalBsmtSF']
+            )
+            if settings['calc_total_sf'] == 'replace':
+                self.df = self.df.drop(columns=['1stFlrSF', '2ndFlrSF', 'TotalBsmtSF'])
+
     def _handle_gradations(self):
         for column, order in self.cfg.gradations.items():
             if column in self.df.columns:
@@ -56,8 +81,8 @@ class Preprocessor:
         num_imputer = self.cfg.get_numerical_imputer()
         cat_imputer = self.cfg.get_categorical_imputer()
 
-        for junk in ['None', '?']:
-            self.df.replace(junk, np.nan, inplace=True)
+        # for junk in ['None', '?']:
+        #     self.df.replace(junk, np.nan, inplace=True)
 
         for col in self.df.columns:
             if self.df[col].isnull().sum() == 0:

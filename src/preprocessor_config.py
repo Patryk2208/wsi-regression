@@ -7,6 +7,7 @@ class PreprocessorConfig:
     
     # general
     target_col: str = "SalePrice"
+    n_repeats: int = 10
     n_splits: int = 5
     random_state: int = 1234
 

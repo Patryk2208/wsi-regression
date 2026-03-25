@@ -1,4 +1,5 @@
 # Data split
+n_repeats: 10
 n_splits: 5
 random_state: 123456
 
@@ -32,6 +33,21 @@ target_col: SalePrice  # Name of the target column
 model_type: lasso
 model_params:
   alpha: 0.0008
+
+# model_type: gridsearch
+# model_params:
+#   cv: 5
+#   scoring: neg_mean_absolute_error
+
+#model_type: randomizedsearch
+#model_params:
+#  n_iter: 100
+#  cv: 5
+#  scoring: neg_mean_absolute_error
+
+feature_engineering: # no, append, replace
+  calc_age: no
+  calc_total_sf: no
 
 gradations:
   # General Quality and Condition (1-10 scale)
