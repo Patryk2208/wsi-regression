@@ -32,6 +32,8 @@ class PreprocessorConfig:
     model_type: str = "linear"  # Options: "linear", "ridge", "lasso"
     model_params: Dict[str, Any] = field(default_factory=dict)
 
+    feature_engineering: Dict[str, Any] = field(default_factory=dict)
+
     def get_scaler(self):
         mapping = {
             'standard': StandardScaler(),

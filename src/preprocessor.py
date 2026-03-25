@@ -108,7 +108,7 @@ class Preprocessor:
                     drop_first=True,
                     prefix=col
                 )
-    
+
     def _encode_high_cardinality(self):
 
         # fallback
